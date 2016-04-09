@@ -2,7 +2,7 @@
 
 Genome* Genome::copy() {
     Genome* cp = new Genome();
-    for(int i=0; i<CHILDDEPTH; i++) {
+    for(size_t i=0; i<CHILDDEPTH; i++) {
         if(pars[i] != NULL)
             cp->pars[i] = pars[i]->copy();
         else
@@ -87,7 +87,7 @@ Genome* Genome::mate(Genome* partner) {
             child->setPerturbFactor(child->getPerturbFactor() + 0.1);
     }
 
-    for(int i=0; i<CHILDDEPTH; i++) {
+    for(size_t i=0; i<CHILDDEPTH; i++) {
         if(raremutate()) {
             if(coinflip() && i != 0)  //50% chance to be null (except on the first level)
                 continue;
@@ -138,7 +138,7 @@ Genome* Genome::mate(Genome* partner) {
             child->pars[i]->numLayers += -1 + (rand()%3);
             if(child->pars[i]->numLayers <= 0)
                 child->pars[i]->numLayers = 1;
-            else if(MAX_LAYERS > 0 && child->pars[i]->numLayers > MAX_LAYERS)
+            else if(MAX_LAYERS > 0 && child->pars[i]->numLayers > (int)MAX_LAYERS)
                 child->pars[i]->numLayers = MAX_LAYERS;
         }
 
@@ -325,7 +325,7 @@ int Genome::getRandomExtraAnswerTurns() {
 }
 
 int Genome::getRandomNumPerturbRuns() {
-    int np = (int)fabs(gaussianRandom(0, 3));
+    size_t np = (size_t)fabs(gaussianRandom(0, 3));
     if(np > MAX_NUMPERTURBS)
         np = MAX_NUMPERTURBS;
     return np;
@@ -370,7 +370,7 @@ ClusterParameters* Genome::createRandomClusterParameters() {
 }
 
 void Genome::createRandomGenome() {
-    for(int i=0; i<CHILDDEPTH; i++) {
+    for(size_t i=0; i<CHILDDEPTH; i++) {
         if(rand()%(i+1) == 0)
             pars[i] = createRandomClusterParameters();
         else
@@ -421,7 +421,7 @@ void Genome::saveGenome(const char* file) {
     outfile << "-1 perturbChance: " << perturbChance << std::endl;
     outfile << "-1 perturbFactor: " << perturbFactor << std::endl;
 
-    for(int i=0; i<CHILDDEPTH; i++) {
+    for(size_t i=0; i<CHILDDEPTH; i++) {
         if(pars[i] != NULL) {
             outfile << i << " numLayers: " << pars[i]->numLayers << std::endl;
             outfile << i << " nodesPerLayer: " << pars[i]->nodesPerLayer << std::endl;
@@ -469,7 +469,7 @@ void Genome::saveGenome(const char* file) {
 
 void Genome::loadGenome(const char* file) {
     //clear previous pars
-    for(int i=0; i<CHILDDEPTH; i++) {
+    for(size_t i=0; i<CHILDDEPTH; i++) {
         if(pars[i] != NULL) {
             delete pars[i];
             pars[i] = NULL;
@@ -565,7 +565,7 @@ void Genome::loadGenome(const char* file) {
                     convProperties[convLayer].push_back(cp);
                 }
             }
-            if(p >= CHILDDEPTH)
+            if((size_t)p >= CHILDDEPTH)
                 continue;
 
             if(pars[p] == NULL)
@@ -602,7 +602,7 @@ void Genome::loadGenome(const char* file) {
 
 bool Genome::hasSideWeights() {
     bool sideWeights = false;
-    for(int i=0; i<CHILDDEPTH; i++) {
+    for(size_t i=0; i<CHILDDEPTH; i++) {
         if(pars[i] == NULL)
             break;
         if(pars[i]->learnStyleSide != LEARNSTYLENONE) {
@@ -623,13 +623,13 @@ ConvolutionProperties Genome::mutateConvolutionProperties(ConvolutionProperties 
     }
 
     //numLayers
-    if(raremutate() && cp.numLayers < MAX_CONVOLUTION_NODE_LAYERS)
+    if(raremutate() && cp.numLayers < (int)MAX_CONVOLUTION_NODE_LAYERS)
         cp.numLayers++;
     if(raremutate() && cp.numLayers > 1)
         cp.numLayers--;
 
     //nodesPerLayer
-    if(mutate() && cp.nodesPerLayer < MAX_CONVOLUTION_NODESPERLAYER)
+    if(mutate() && cp.nodesPerLayer < (int)MAX_CONVOLUTION_NODESPERLAYER)
         cp.nodesPerLayer++;
     if(mutate() && cp.nodesPerLayer > 1)
         cp.nodesPerLayer--;

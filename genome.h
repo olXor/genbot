@@ -29,31 +29,31 @@ static ConvolutionProperties CONVOLUTION_PROPERTIES_INITIALIZER = {
 
 class Genome {
     private:
-        int CHILDDEPTH = 1;
+        size_t CHILDDEPTH = 1;
 
         int ALLOW_SIDE_WEIGHTS = 0;
         int ALLOW_SIDE_MEMS = 0;
 
-        int MAX_NODESPERLAYER = 200;
-        int MAX_LAYERS = 2;
-        int MAX_NUMPERTURBS = 0;
+        size_t MAX_NODESPERLAYER = 200;
+        size_t MAX_LAYERS = 2;
+        size_t MAX_NUMPERTURBS = 0;
 
         //"convolution levels" refers to the number of sequential convolutions the data passes through before going to the cluster. "convolution node layers" refers to the number of node layers in each convolution.
-        int MAX_CONVOLUTION_LEVELS = 2;
-        int MIN_CONVOLUTION_LEVELS = 2;
+        size_t MAX_CONVOLUTION_LEVELS = 2;
+        size_t MIN_CONVOLUTION_LEVELS = 2;
 
-        int MAX_CONVOLUTIONS = 3;
-        int MIN_CONVOLUTIONS = 1;
+        size_t MAX_CONVOLUTIONS = 3;
+        size_t MIN_CONVOLUTIONS = 1;
 
-        int MAX_CONVOLUTION_NODE_LAYERS = 1;
-        int MAX_CONVOLUTION_NODESPERLAYER = 10;
+        size_t MAX_CONVOLUTION_NODE_LAYERS = 1;
+        size_t MAX_CONVOLUTION_NODESPERLAYER = 10;
 
-        int MAX_CONVOLUTION_DIMENSION = 10;
-        int MIN_CONVOLUTION_DIMENSION = 2;
+        size_t MAX_CONVOLUTION_DIMENSION = 10;
+        size_t MIN_CONVOLUTION_DIMENSION = 2;
 
         double CONVOLUTION_DIMENSION_LAYER_MULTIPLIER = 2.0;
 
-        int NUM_TURNS_SAVED = 15;
+        size_t NUM_TURNS_SAVED = 15;
 
     public:
         ClusterParameters** pars;   //length CHILDDEPTH
@@ -71,7 +71,7 @@ class Genome {
 
         Genome() {
             pars = new ClusterParameters*[CHILDDEPTH];
-            for(int i=0; i<CHILDDEPTH; i++) {
+            for(size_t i=0; i<CHILDDEPTH; i++) {
                 pars[i] = NULL;
             }
             extraAnswerTurns = 0;
@@ -84,7 +84,7 @@ class Genome {
 
         Genome(ConvolutionProperties def) {
             pars = new ClusterParameters*[CHILDDEPTH];
-            for(int i=0; i<CHILDDEPTH; i++) {
+            for(size_t i=0; i<CHILDDEPTH; i++) {
                 pars[i] = NULL;
             }
             extraAnswerTurns = 0;
@@ -96,7 +96,7 @@ class Genome {
         }
 
         ~Genome() {
-            for(int i=0; i<CHILDDEPTH; i++) {
+            for(size_t i=0; i<CHILDDEPTH; i++) {
                 if(pars[i] != NULL)
                     delete pars[i];
             }

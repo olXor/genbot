@@ -428,7 +428,7 @@ void Genbot::createConvolutions() {
 }
 
 int Genbot::convolutionGlobalLocationToInput(ConvolutionProperties cp, std::vector<int> loc) {
-    int in = 0;
+    int in = cp.inputRangeBegin;
     int mult = 1;
     for(int i=0; i<cp.rank; i++) {
         in += loc[i]*mult;

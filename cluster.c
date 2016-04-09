@@ -264,15 +264,15 @@ inline double Cluster::transferFunction(double in, int layer) {
         case 0: //identity
             return in;
         case 1: //sigmoid
-            if(in/pars->transferWidth > 300)
+            if(in/pars->transferWidth > TRANSFER_FUNCTION_LIMIT)
                 return 1;
-            if(in/pars->transferWidth < -300)
+            if(in/pars->transferWidth < -TRANSFER_FUNCTION_LIMIT)
                 return 0;
             return 1/(1+fastexp(-in/pars->transferWidth));
         case 2: //rectifier:
-            if(in/pars->transferWidth > 300)
+            if(in/pars->transferWidth > TRANSFER_FUNCTION_LIMIT)
                 return in/pars->transferWidth;
-            if(in/pars->transferWidth < -300)
+            if(in/pars->transferWidth < -TRANSFER_FUNCTION_LIMIT)
                 return 0;
             return fastlog(1+fastexp(in/pars->transferWidth));
         case 3: //arcsinh
@@ -288,13 +288,13 @@ inline double Cluster::transferDerivative(double in, int layer) {
         case 0: //identity
             return 1;
         case 1: //derivative of sigmoid
-            if(fabs(in/pars->transferWidth)>300)
+            if(fabs(in/pars->transferWidth)>TRANSFER_FUNCTION_LIMIT)
                 return 0;
             return (1/pars->transferWidth)*fastexp(in/pars->transferWidth)/fastpow2(1+fastexp(in/pars->transferWidth));
         case 2: //derivative of rectifier (a sigmoid)
-            if(in/pars->transferWidth > 300)
+            if(in/pars->transferWidth > TRANSFER_FUNCTION_LIMIT)
                 return 1/pars->transferWidth;
-            if(in/pars->transferWidth < -300)
+            if(in/pars->transferWidth < -TRANSFER_FUNCTION_LIMIT)
                 return 0;
             return (1/pars->transferWidth)/(1+fastexp(-in/pars->transferWidth));
         case 3: //arcsinh

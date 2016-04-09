@@ -23,6 +23,8 @@
 #define LEARNSTYLEALT 3
 #define LEARNSTYLEALTR 4
 
+#define TRANSFER_FUNCTION_LIMIT 50      //highest or lowest value of transfer function input which is actually calculated
+
 class ClusterParameters {
     public:
 

@@ -725,3 +725,47 @@ double Genome::getRandomConvolutionStepFactor() {
 double Genome::getRandomConvolutionTransferWidth() {
     return getRandomTransferWidth();
 }
+
+void Genome::readCfg() {
+    std::ifstream genfile("gen.cfg");
+    std::string line;
+    while(std::getline(genfile, line)) {
+        std::string variable;
+        std::string value;
+        if(!(std::istringstream(line) >> variable >> value))
+            throw std::runtime_error("invalid gen.cfg");
+
+        if(variable == "CHILDDEPTH")
+            std::istringstream(value) >> CHILDDEPTH;
+        else if(variable == "ALLOW_SIDE_WEIGHTS")
+            std::istringstream(value) >> ALLOW_SIDE_WEIGHTS;
+        else if(variable == "ALLOW_SIDE_MEMS")
+            std::istringstream(value) >> ALLOW_SIDE_MEMS;
+        else if(variable == "MAX_NODESPERLAYER")
+            std::istringstream(value) >> MAX_NODESPERLAYER;
+        else if(variable == "MAX_LAYERS")
+            std::istringstream(value) >> MAX_LAYERS;
+        else if(variable == "MAX_NUMPERTURBS")
+            std::istringstream(value) >> MAX_NUMPERTURBS;
+        else if(variable == "MAX_CONVOLUTION_LEVELS")
+            std::istringstream(value) >> MAX_CONVOLUTION_LEVELS;
+        else if(variable == "MIN_CONVOLUTION_LEVELS")
+            std::istringstream(value) >> MIN_CONVOLUTION_LEVELS;
+        else if(variable == "MAX_CONVOLUTIONS")
+            std::istringstream(value) >> MAX_CONVOLUTIONS;
+        else if(variable == "MIN_CONVOLUTIONS")
+            std::istringstream(value) >> MIN_CONVOLUTIONS;
+        else if(variable == "MAX_CONVOLUTION_NODE_LAYERS")
+            std::istringstream(value) >> MAX_CONVOLUTION_NODE_LAYERS;
+        else if(variable == "MAX_CONVOLUTION_NODESPERLAYER")
+            std::istringstream(value) >> MAX_CONVOLUTION_NODESPERLAYER;
+        else if(variable == "MAX_CONVOLUTION_DIMENSION")
+            std::istringstream(value) >> MAX_CONVOLUTION_DIMENSION;
+        else if(variable == "MIN_CONVOLUTION_DIMENSION")
+            std::istringstream(value) >> MIN_CONVOLUTION_DIMENSION;
+        else if(variable == "CONVOLUTION_DIMENSION_LAYER_MULTIPLIER")
+            std::istringstream(value) >> CONVOLUTION_DIMENSION_LAYER_MULTIPLIER;
+        else if(variable == "NUM_TURNS_SAVED")
+            std::istringstream(value) >> NUM_TURNS_SAVED;
+    }
+}

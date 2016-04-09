@@ -333,7 +333,7 @@ ClusterParameters* Genbot::getConvolutionClusterParameters(ConvolutionProperties
     pars->memfactor = 1;
     pars->memnorm = 1;
     pars->learnStyleSide = LEARNSTYLENONE;
-    pars->numTurnsSaved = NUM_TURNS_SAVED;
+    pars->numTurnsSaved = genome->getNumTurnsSaved();
     pars->randomWeights = 1;
     pars->useBackWeights = 0;
     pars->backPropBackWeights = 0;

@@ -727,7 +727,7 @@ double Genome::getRandomConvolutionTransferWidth() {
 }
 
 void Genome::readCfg() {
-    std::ifstream genfile("gen.cfg");
+    std::ifstream genfile("genbot/gen.cfg");
     std::string line;
     while(std::getline(genfile, line)) {
         std::string variable;

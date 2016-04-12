@@ -256,7 +256,7 @@ int Cluster::getTransferType(int layer, int level) {
     return 2;   //rectifier
 }
 
-double Cluster::transferFunction(double in, int layer) {
+inline double Cluster::transferFunction(double in, int layer) {
     int type = getTransferType(layer,pars->tlevel);
 
     switch(type) {
@@ -280,7 +280,7 @@ double Cluster::transferFunction(double in, int layer) {
     return 0.5;
 }
 
-double Cluster::transferDerivative(double in, int layer) {
+inline double Cluster::transferDerivative(double in, int layer) {
     int type = getTransferType(layer,pars->tlevel);
 
     switch(type) {

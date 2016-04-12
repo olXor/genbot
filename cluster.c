@@ -250,7 +250,7 @@ void Cluster::calculate() {
 
 int Cluster::getTransferType(int layer, int level) {
     (void)level;
-    if(/*!pars->useOutputTransfer && */layer==pars->numLayers)
+    if(!pars->useOutputTransfer && layer==pars->numLayers)
         return 0; //identity
     //return 1; //sigmoid
     return 2;   //rectifier
@@ -289,10 +289,10 @@ double Cluster::transferDerivative(double in, int layer) {
         case 1: //derivative of sigmoid
             if(fabs(in/pars->transferWidth)>TRANSFER_FUNCTION_LIMIT)
                 return 0;
-	    else {
-		double expon = fastexp(in/pars->transferWidth);
-		return (1/pars->transferWidth)*expon/((1+expon)*(1+expon));
-	    }
+            else {
+                double expon = fastexp(in/pars->transferWidth);
+                return (1/pars->transferWidth)*expon/((1+expon)*(1+expon));
+            }
         case 2: //derivative of rectifier (a sigmoid)
             if(in/pars->transferWidth > TRANSFER_FUNCTION_LIMIT)
                 return 1/pars->transferWidth;

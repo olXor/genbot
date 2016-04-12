@@ -143,6 +143,11 @@ class Cluster {
 
     double ** backPropagateOutputError; //[pars->numTurnsSaved][pars->numOutputs]
 
+    double *** transferFunctions; //[pars->numTurnsSaved][pars->numLayers][pars.nodesPerLayer]
+    double *** transferDerivatives; //[pars->numTurnsSaved][pars->numLayers][pars.nodesPerLayer]
+    double ** outputTransferFunctions; //[pars->numTurnsSaved][pars->numOutputs]
+    double ** outputTransferDerivatives; //[pars->numTurnsSaved][pars->numOutputs]
+
     int clusterTurn;
     int currentInput;
     bool isConvChild = false;

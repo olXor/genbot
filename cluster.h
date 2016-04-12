@@ -185,6 +185,7 @@ class Cluster {
     void copyWeights(Cluster* source, double changeChance);
     Cluster* getChildCluster(int* layer, int* node, int depth);
     void mutateWeights(double mutateFactor);
+    void setTransfers();
 
     double getInputToNode(int node, int input);
     double getNodeToNode(int layer, int node1, int node2);

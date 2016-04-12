@@ -256,7 +256,7 @@ int Cluster::getTransferType(int layer, int level) {
     return 2;   //rectifier
 }
 
-inline double Cluster::transferFunction(double in, int layer) {
+double Cluster::transferFunction(double in, int layer) {
     int type = getTransferType(layer,pars->tlevel);
 
     switch(type) {
@@ -280,7 +280,7 @@ inline double Cluster::transferFunction(double in, int layer) {
     return 0.5;
 }
 
-inline double Cluster::transferDerivative(double in, int layer) {
+double Cluster::transferDerivative(double in, int layer) {
     int type = getTransferType(layer,pars->tlevel);
 
     switch(type) {
@@ -686,9 +686,7 @@ void Cluster::backPropagate(double *realoutput, double abspp, double** inputErro
     backPropagateError(backPropagateOutputError, abspp, inputError);
 }
 
-void Cluster::backPropagateError(double** outputError, double abspp, double** inputError){
-    clearNodeError();
-
+void Cluster::setTransfers() {
     for(int t=0; t<pars->numTurnsSaved; t++) {
         for(int i=0; i<pars->numLayers; i++) {
             for(int j=0; j<pars->nodesPerLayer; j++) {
@@ -699,6 +697,17 @@ void Cluster::backPropagateError(double** outputError, double abspp, double** in
         for(int i=0; i<pars->numOutputs; i++) {
             outputTransferFunctions[t][i] = transferFunction(savedOutputs[getTurn(-t)][i],pars->numLayers);
             outputTransferDerivatives[t][i] = transferDerivative(savedOutputs[getTurn(-t)][i],pars->numLayers);
+        }
+    }
+}
+
+void Cluster::backPropagateError(double** outputError, double abspp, double** inputError){
+    clearNodeError();
+    setTransfers();
+    for(int i=0; i<pars->numLayers; i++) {
+        for(int j=0; j<pars->nodesPerLayer; j++) {
+            if(nodeClusters[i][j] != NULL)
+                nodeClusters[i][j]->setTransfers();
         }
     }
     

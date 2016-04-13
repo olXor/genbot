@@ -28,7 +28,6 @@ class DllExport Genbot {
     size_t convMinDepth;
     int numInputs;
     bool alreadySetInputs = false;
-    std::vector<int> maxConvInputs;
 
     public:
     Genbot() {
@@ -86,6 +85,20 @@ class DllExport Genbot {
     }
 
     ~Genbot() {
+        if(convolutions.size() > 0) {
+            size_t numTurnsSaved = cluster->getPars()->numTurnsSaved;
+            for(size_t i=0; i<maxConvsOnLayer; i++) {
+                for(size_t j=0; j<numTurnsSaved; j++) {
+                    delete [] convInputError[i][j];
+                    delete [] convOutputError[i][j];
+                }
+                delete [] convInputError[i];
+                delete [] convOutputError[i];
+            }
+            delete [] convInputError;
+            delete [] convOutputError;
+        }
+
         delete genome;
         delete cluster;
         for(size_t i=0; i<convolutions.size(); i++) {
@@ -154,6 +167,12 @@ class DllExport Genbot {
     int getInputNumberFromConvolutionNumber(int n);
     bool convolutionContainedIn(std::vector<int> smallLoc, std::vector<int> smallDim, std::vector<int> bigLoc, std::vector<int> bigDim);
     std::vector<int> getConvolutionLocation(ConvolutionProperties cp, int n);
+    void createConvErrors();
+
+    std::vector<int> maxConvInputs;
+    double*** convInputError;
+    double*** convOutputError;
+    size_t maxConvsOnLayer;
 
 };
 

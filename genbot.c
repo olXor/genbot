@@ -411,20 +411,7 @@ void Genbot::createConvolutions() {
 
     convMinDepth = getConvMinDepth();   //has to go at the end of this method because it uses some of the above arrays
 
-    size_t maxConvsOnLayer = 0;
-    for(size_t i=0; i<convolutions.size(); i++) {
-        if(convolutions[i].size() > maxConvsOnLayer)
-            maxConvsOnLayer = convolutions[i].size();
-    }
-    maxConvInputs.resize(maxConvsOnLayer);
-    for(size_t i=0; i<maxConvsOnLayer; i++) {
-        maxConvInputs[i] = 0;
-        for(size_t j=0; j<convolutions.size(); j++) {
-            if(i < convolutions[j].size() && convolutions[j][i]->getPars()->numInputs > maxConvInputs[i]) {
-                maxConvInputs[i] = convolutions[j][i]->getPars()->numInputs;
-            }
-        }
-    }
+    createConvErrors();
 }
 
 int Genbot::convolutionGlobalLocationToInput(ConvolutionProperties cp, std::vector<int> loc) {
@@ -538,25 +525,42 @@ int Genbot::getInputNumberFromConvolutionNumber(int n) {
     return n;
 }
 
-void Genbot::backPropagateConvolutions(double** inputError, double abspp) {
-    size_t numTurnsSaved = cluster->getPars()->numTurnsSaved;
-    size_t numConvLayers = convolutions.size();
-    size_t numConvsOnLayer = convolutions[numConvLayers-1].size();
-    size_t maxConvsOnLayer = 0;
-    for(size_t i=0; i<numConvLayers; i++) {
+void Genbot::createConvErrors() {
+    if(convolutions.size() == 0) return;
+    size_t numTurnsSaved = genome->pars[0]->numTurnsSaved;
+    maxConvsOnLayer = 0;
+    for(size_t i=0; i<convolutions.size(); i++) {
         if(convolutions[i].size() > maxConvsOnLayer)
             maxConvsOnLayer = convolutions[i].size();
     }
-    double*** convInputError = new double**[maxConvsOnLayer];
-    double*** convOutputError = new double**[maxConvsOnLayer];
+
+    maxConvInputs.resize(maxConvsOnLayer);
+
+    for(size_t j=0; j<convolutions.size(); j++) {
+        for(size_t i=0; i<maxConvsOnLayer; i++) {
+            maxConvInputs[i] = 0;
+            if(i < convolutions[j].size() && convolutions[j][i]->getPars()->numInputs > maxConvInputs[i]) {
+                maxConvInputs[i] = convolutions[j][i]->getPars()->numInputs;
+            }
+        }
+    }
+
+    convInputError = new double**[maxConvsOnLayer];
+    convOutputError = new double**[maxConvsOnLayer];
     for(size_t i=0; i<maxConvsOnLayer; i++) {
         convInputError[i] = new double*[numTurnsSaved];
         convOutputError[i] = new double*[numTurnsSaved];
         for(size_t j=0; j<numTurnsSaved; j++) {
-            convOutputError[i][j] = new double[1];
             convInputError[i][j] = new double[maxConvInputs[i]];
+            convOutputError[i][j] = new double[1];
         }
     }
+}
+
+void Genbot::backPropagateConvolutions(double** inputError, double abspp) {
+    size_t numTurnsSaved = cluster->getPars()->numTurnsSaved;
+    size_t numConvLayers = convolutions.size();
+    size_t numConvsOnLayer = convolutions[numConvLayers-1].size();
 
     for(size_t i=0; i<numConvsOnLayer; i++) {
         for(size_t j=0; j<numTurnsSaved; j++) {
@@ -603,39 +607,11 @@ void Genbot::backPropagateConvolutions(double** inputError, double abspp) {
                 }
             }
         }
-        else {
-            for(size_t i=0; i<maxConvsOnLayer; i++) {
-                for(size_t j=0; j<numTurnsSaved; j++) {
-                    delete [] convInputError[i][j];
-                }
-                delete [] convInputError[i];
-            }
-            delete [] convInputError;
-            convInputError = NULL;
-        }
 
         for(size_t i=0; i<numConvsOnLayer; i++) {
-            convolutions[layer][i]->backPropagateError(convOutputError[i], abspp, (convInputError != NULL ? convInputError[i] : NULL));
+            convolutions[layer][i]->backPropagateError(convOutputError[i], abspp, (layer != 0 ? convInputError[i] : NULL));
         }
     }
-    
-    if(convInputError != NULL) {
-        for(size_t i=0; i<maxConvsOnLayer; i++) {
-            for(size_t j=0; j<numTurnsSaved; j++) {
-                delete [] convInputError[i][j];
-            }
-            delete [] convInputError[i];
-        }
-        delete [] convInputError;
-    }
-
-    for(size_t i=0; i<maxConvsOnLayer; i++) {
-        for(size_t j=0; j<numTurnsSaved; j++) {
-            delete [] convOutputError[i][j];
-        }
-        delete [] convOutputError[i];
-    }
-    delete [] convOutputError;
 }
 
 int Genbot::getConvMinDepth() {

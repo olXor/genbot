@@ -130,10 +130,12 @@ void Cluster::learnRawOutput(double* correctoutput, double learnfactor, int size
 
 void Cluster::calculate() {
     incrementTurn();
+    setTransfers(CALCULATE_TRANSFERS);
     for(int i=0; i<pars->numLayers; i++) {
         for(int j=0; j<pars->nodesPerLayer; j++) {
             if(nodeClusters[i][j] != NULL) {
                 nodeClusters[i][j]->resetInputs();
+                nodeClusters[i][j]->setTransfers(CALCULATE_TRANSFERS);
             }
         }
     }
@@ -162,18 +164,18 @@ void Cluster::calculate() {
             for(int k=0; k<pars->nodesPerLayer; k++) {
                 if(pars->learnStyleSide == LEARNSTYLEBP || (pars->learnStyleSide == LEARNSTYLEALT && i%2==1) || (pars->learnStyleSide == LEARNSTYLEALTR && i%2==0)) {
                     if(nodeClusters[i][j] == NULL) {
-                        savedNodeStrengths[getTurn(0)][i][j] += sideWeights[i][j][k]*transferFunction(savedNodeStrengths[getTurn(-1)][i][k],i);
+                        savedNodeStrengths[getTurn(0)][i][j] += sideWeights[i][j][k]*transferFunctions[1][i][k];
                     }
                     else {
-                        nodeClusters[i][j]->setInput(sideWeights[i][j][k]*transferFunction(savedNodeStrengths[getTurn(-1)][i][k],i),0,getInputNumber(i, j, SIDEWEIGHT, k));
+                        nodeClusters[i][j]->setInput(sideWeights[i][j][k]*transferFunctions[1][i][k],0,getInputNumber(i, j, SIDEWEIGHT, k));
                     }
                 }
                 if(pars->learnStyleSide == LEARNSTYLEHB || (pars->learnStyleSide == LEARNSTYLEALT && i%2==0) || (pars->learnStyleSide == LEARNSTYLEALTR && i%2==1)) {
                     if(nodeClusters[i][j] == NULL) {
-                        savedNodeStrengths[getTurn(0)][i][j] += sideMems[i][j][k]*memStrengths[i][k]*transferFunction(savedNodeStrengths[getTurn(-1)][i][k],i);
+                        savedNodeStrengths[getTurn(0)][i][j] += sideMems[i][j][k]*memStrengths[i][k]*transferFunctions[1][i][k];
                     }
                     else {
-                        nodeClusters[i][j]->setInput(sideMems[i][j][k]*memStrengths[i][k]*transferFunction(savedNodeStrengths[getTurn(-1)][i][k],i), 0, getInputNumber(i, j, SIDEMEM, k));
+                        nodeClusters[i][j]->setInput(sideMems[i][j][k]*memStrengths[i][k]*transferFunctions[1][i][k], 0, getInputNumber(i, j, SIDEMEM, k));
                     }
                 }
             }
@@ -185,18 +187,18 @@ void Cluster::calculate() {
             for(int k=0; k<pars->nodesPerLayer; k++) {
                 if(pars->useBackWeights) {
                     if(nodeClusters[i][j] == NULL) {
-                        savedNodeStrengths[getTurn(0)][i][j] += backWeights[i][j][k]*transferFunction(savedNodeStrengths[getTurn(-1)][i+1][k],i);
+                        savedNodeStrengths[getTurn(0)][i][j] += backWeights[i][j][k]*transferFunctions[1][i+1][k];
                     }
                     else {
-                        nodeClusters[i][j]->setInput(backWeights[i][j][k]*transferFunction(savedNodeStrengths[getTurn(-1)][i+1][k],i), 0, getInputNumber(i, j, BACKWEIGHT, k));
+                        nodeClusters[i][j]->setInput(backWeights[i][j][k]*transferFunctions[1][i+1][k], 0, getInputNumber(i, j, BACKWEIGHT, k));
                     }
                 }
                 if(pars->useBackMems) {
                     if(nodeClusters[i][j] == NULL) {
-                        savedNodeStrengths[getTurn(0)][i][j] += backMems[i][j][k]*memStrengths[i+1][k]*transferFunction(savedNodeStrengths[getTurn(-1)][i+1][k],i);
+                        savedNodeStrengths[getTurn(0)][i][j] += backMems[i][j][k]*memStrengths[i+1][k]*transferFunctions[1][i+1][k];
                     }
                     else {
-                        nodeClusters[i][j]->setInput(backMems[i][j][k]*memStrengths[i+1][k]*transferFunction(savedNodeStrengths[getTurn(-1)][i+1][k],i), 0, getInputNumber(i, j, BACKMEM, k));
+                        nodeClusters[i][j]->setInput(backMems[i][j][k]*memStrengths[i+1][k]*transferFunctions[1][i+1][k], 0, getInputNumber(i, j, BACKMEM, k));
                     }
                 }
             }
@@ -207,17 +209,17 @@ void Cluster::calculate() {
         for(int j=0; j<pars->nodesPerLayer; j++) {
             for(int k=0; k<pars->nodesPerLayer; k++) {
                 if(nodeClusters[i][j] == NULL) {
-                    savedNodeStrengths[getTurn(0)][i][j] += nodesToNodes[i-1][j][k]*transferFunction(savedNodeStrengths[getTurn(-1)][i-1][k],i-1);
+                    savedNodeStrengths[getTurn(0)][i][j] += nodesToNodes[i-1][j][k]*transferFunctions[1][i-1][k];
                 }
                 else {
-                    nodeClusters[i][j]->setInput(nodesToNodes[i-1][j][k]*transferFunction(savedNodeStrengths[getTurn(-1)][i-1][k],i-1), 0, getInputNumber(i, j, FORWARDWEIGHT, k));
+                    nodeClusters[i][j]->setInput(nodesToNodes[i-1][j][k]*transferFunctions[1][i-1][k], 0, getInputNumber(i, j, FORWARDWEIGHT, k));
                 }
                 if(pars->useForwardMems) {
                     if(nodeClusters[i][j] == NULL) {
-                        savedNodeStrengths[getTurn(0)][i][j] += forwardMems[i-1][j][k]*memStrengths[i-1][k]*transferFunction(savedNodeStrengths[getTurn(-1)][i-1][k],i-1);
+                        savedNodeStrengths[getTurn(0)][i][j] += forwardMems[i-1][j][k]*memStrengths[i-1][k]*transferFunctions[1][i-1][k];
                     }
                     else {
-                        nodeClusters[i][j]->setInput(forwardMems[i-1][j][k]*memStrengths[i-1][k]*transferFunction(savedNodeStrengths[getTurn(-1)][i-1][k],i-1), 0, getInputNumber(i, j, FORWARDMEM, k));
+                        nodeClusters[i][j]->setInput(forwardMems[i-1][j][k]*memStrengths[i-1][k]*transferFunctions[1][i-1][k], 0, getInputNumber(i, j, FORWARDMEM, k));
                     }
                 }
             }
@@ -242,7 +244,7 @@ void Cluster::calculate() {
     //go from final node layer to output neuron
     for(int j=0; j<pars->numOutputs; j++) {
         for(int i=0; i<pars->nodesPerLayer; i++) {
-            savedOutputs[getTurn(0)][j] += nodesToOutput[j][i]*transferFunction(savedNodeStrengths[getTurn(-1)][pars->numLayers-1][i],pars->numLayers-1);
+            savedOutputs[getTurn(0)][j] += nodesToOutput[j][i]*transferFunctions[1][pars->numLayers-1][i];
         }
         savedOutputs[getTurn(0)][j] -= outputThresholds[j];
     }
@@ -686,28 +688,37 @@ void Cluster::backPropagate(double *realoutput, double abspp, double** inputErro
     backPropagateError(backPropagateOutputError, abspp, inputError);
 }
 
-void Cluster::setTransfers() {
-    for(int t=0; t<pars->numTurnsSaved; t++) {
+void Cluster::setTransfers(int transferType) {
+    if(transferType == CALCULATE_TRANSFERS) {
         for(int i=0; i<pars->numLayers; i++) {
             for(int j=0; j<pars->nodesPerLayer; j++) {
-                transferFunctions[t][i][j] = transferFunction(savedNodeStrengths[getTurn(-t)][i][j],i);
-                transferDerivatives[t][i][j] = transferDerivative(savedNodeStrengths[getTurn(-t)][i][j],i);
+                transferFunctions[1][i][j] = transferFunction(savedNodeStrengths[getTurn(-1)][i][j],i);
             }
         }
-        for(int i=0; i<pars->numOutputs; i++) {
-            outputTransferFunctions[t][i] = transferFunction(savedOutputs[getTurn(-t)][i],pars->numLayers);
-            outputTransferDerivatives[t][i] = transferDerivative(savedOutputs[getTurn(-t)][i],pars->numLayers);
+    }
+    else if(transferType == ALL_TRANSFERS) {
+        for(int t=0; t<pars->numTurnsSaved; t++) {
+            for(int i=0; i<pars->numLayers; i++) {
+                for(int j=0; j<pars->nodesPerLayer; j++) {
+                    transferFunctions[t][i][j] = transferFunction(savedNodeStrengths[getTurn(-t)][i][j],i);
+                    transferDerivatives[t][i][j] = transferDerivative(savedNodeStrengths[getTurn(-t)][i][j],i);
+                }
+            }
+            for(int i=0; i<pars->numOutputs; i++) {
+                outputTransferFunctions[t][i] = transferFunction(savedOutputs[getTurn(-t)][i],pars->numLayers);
+                outputTransferDerivatives[t][i] = transferDerivative(savedOutputs[getTurn(-t)][i],pars->numLayers);
+            }
         }
     }
 }
 
 void Cluster::backPropagateError(double** outputError, double abspp, double** inputError){
     clearNodeError();
-    setTransfers();
+    setTransfers(ALL_TRANSFERS);
     for(int i=0; i<pars->numLayers; i++) {
         for(int j=0; j<pars->nodesPerLayer; j++) {
             if(nodeClusters[i][j] != NULL)
-                nodeClusters[i][j]->setTransfers();
+                nodeClusters[i][j]->setTransfers(ALL_TRANSFERS);
         }
     }
     

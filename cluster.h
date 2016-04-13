@@ -25,6 +25,9 @@
 
 #define TRANSFER_FUNCTION_LIMIT 50      //highest or lowest value of transfer function input which is actually calculated
 
+#define ALL_TRANSFERS 0
+#define CALCULATE_TRANSFERS 1
+
 class ClusterParameters {
     public:
 
@@ -185,7 +188,7 @@ class Cluster {
     void copyWeights(Cluster* source, double changeChance);
     Cluster* getChildCluster(int* layer, int* node, int depth);
     void mutateWeights(double mutateFactor);
-    void setTransfers();
+    void setTransfers(int transferType);
 
     double getInputToNode(int node, int input);
     double getNodeToNode(int layer, int node1, int node2);

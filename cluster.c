@@ -744,19 +744,23 @@ void Cluster::updateWeights(double abspp) {
     for(int t=1; t<pars->numTurnsSaved-1; t++) {
         //first go from output to last layer (note that the numbering convention for nodeError on the output layer differs from other layers by 1)
         //find normalization factor
-        normfact = 1;
-        for(int i=0; i<pars->nodesPerLayer; i++)
-            normfact += pow(transferFunctions[t][pars->numLayers-1][i],2);
-        normfact = sqrt(normfact);
-        for(int k=0; k<pars->numOutputs; k++) {
-            for(int i=0; i<pars->nodesPerLayer; i++) {
-                nodesToOutput[k][i] -= stepfactor*nodeError[getTurn(-t+1)][pars->numLayers][k][0]*outputTransferDerivatives[t-1][k]*transferFunctions[t][pars->numLayers-1][i]/normfact;
+        if(!fixedLayers[pars->numLayers]) {
+            normfact = 1;
+            for(int i=0; i<pars->nodesPerLayer; i++)
+                normfact += pow(transferFunctions[t][pars->numLayers-1][i],2);
+            normfact = sqrt(normfact);
+            for(int k=0; k<pars->numOutputs; k++) {
+                for(int i=0; i<pars->nodesPerLayer; i++) {
+                    nodesToOutput[k][i] -= stepfactor*nodeError[getTurn(-t+1)][pars->numLayers][k][0]*outputTransferDerivatives[t-1][k]*transferFunctions[t][pars->numLayers-1][i]/normfact;
+                }
+                outputThresholds[k] += stepfactor*nodeError[getTurn(-t+1)][pars->numLayers][k][0]*outputTransferDerivatives[t-1][k]/normfact;
             }
-            outputThresholds[k] += stepfactor*nodeError[getTurn(-t+1)][pars->numLayers][k][0]*outputTransferDerivatives[t-1][k]/normfact;
         }
         //now do intermediate layers
 
         for(int i=pars->numLayers-2; i>=0; i--) {
+            if(fixedLayers[i+1])
+                continue;
             normfact = 1;
             for(int j=0; j<pars->nodesPerLayer; j++)
                 normfact += pow(transferFunctions[t+1][i][j],2);
@@ -825,65 +829,67 @@ void Cluster::updateWeights(double abspp) {
         }
 
         //now do the first layer
-        normfact = 1;
-        for(int i=0; i<pars->numInputs; i++)
-            normfact += pow(savedInputs[getTurn(-t-1)][i],2);
-        if(pars->learnStyleSide == LEARNSTYLEBP) {
-            for(int j=0; j<pars->nodesPerLayer; j++)
-                normfact += pow(transferFunctions[t+1][0][j],2);
-        }
-        if(pars->backPropBackWeights) {
-            for(int j=0; j<pars->nodesPerLayer; j++)
-                normfact += pow(transferFunctions[t+1][1][j],2);
-        }
-        normfact = sqrt(normfact);
-        for(int i=0; i<pars->nodesPerLayer; i++) {
-            for(int j=0; j<pars->numInputs; j++) {
-                if(pars->copyInputsToFirstLevel && i<pars->numInputs) {
-                    if(i==j)
-                        inputToNodes[i][j] = 5;
-                    else
-                        inputToNodes[i][j] = 0;
-                }
-                else {
-                    if(nodeClusters[0][i] == NULL)
-                        inputToNodes[i][j] -= stepfactor*nodeError[getTurn(-t+1)][0][i][0]*transferDerivatives[t][0][i]*savedInputs[getTurn(-t-1)][j]/normfact;
-                    else
-                        inputToNodes[i][j] -= stepfactor*nodeError[getTurn(-t+1)][0][i][getInputNumber(0, i, FORWARDWEIGHT, j)]*savedInputs[getTurn(-t-1)][j]/normfact;
-                }
+        if(!fixedLayers[0]) {
+            normfact = 1;
+            for(int i=0; i<pars->numInputs; i++)
+                normfact += pow(savedInputs[getTurn(-t-1)][i],2);
+            if(pars->learnStyleSide == LEARNSTYLEBP) {
+                for(int j=0; j<pars->nodesPerLayer; j++)
+                    normfact += pow(transferFunctions[t+1][0][j],2);
             }
-            for(int j=0; j<pars->nodesPerLayer; j++) {
-                if(pars->learnStyleSide == LEARNSTYLEBP || pars->learnStyleSide == LEARNSTYLEALTR) {
-                    if(nodeClusters[0][i] == NULL)
-                        sideWeights[0][i][j] -= stepfactor*nodeError[getTurn(-t+1)][0][i][0]*transferDerivatives[t][0][i]*transferFunctions[t+1][0][j]/normfact;                
-                    else
-                        sideWeights[0][i][j] -= stepfactor*nodeError[getTurn(-t+1)][0][i][getInputNumber(0, i, SIDEWEIGHT, j)]*transferFunctions[t+1][0][j]/normfact;                
-                }
-                if(pars->bpMemStrengths && (pars->learnStyleSide == LEARNSTYLEHB || pars->learnStyleSide == LEARNSTYLEALT)) {
-                    if(nodeClusters[0][i] == NULL)
-                        memStrengths[0][j] -= stepfactor*nodeError[getTurn(-t+1)][0][i][0]*transferDerivatives[t][0][i]*transferFunctions[t+1][0][j]*sideMems[0][i][j]/(pars->nodesPerLayer);
-                    else
-                        memStrengths[0][j] -= stepfactor*nodeError[getTurn(-t+1)][0][i][getInputNumber(0, i, SIDEMEM, j)]*transferFunctions[t+1][0][j]*sideMems[0][i][j]/(pars->nodesPerLayer);
-                }
-                if(pars->backPropBackWeights) {
-                    if(nodeClusters[0][i] == NULL)
-                        backWeights[0][i][j] -= stepfactor*nodeError[getTurn(-t+1)][0][i][0]*transferDerivatives[t][0][i]*transferFunctions[t+1][1][j]/normfact;
-                    else
-                        backWeights[0][i][j] -= stepfactor*nodeError[getTurn(-t+1)][0][i][getInputNumber(0, i, BACKWEIGHT, j)]*transferFunctions[t+1][1][j]/normfact;
-                }
-                if(pars->bpMemStrengths && pars->useBackMems) {
-                    if(nodeClusters[0][i] == NULL)
-                        memStrengths[1][j] -= stepfactor*nodeError[getTurn(-t+1)][0][i][0]*transferDerivatives[t][0][i]*transferFunctions[t+1][1][j]*backMems[0][i][j]/(pars->nodesPerLayer);
-                    else
-                        memStrengths[1][j] -= stepfactor*nodeError[getTurn(-t+1)][0][i][getInputNumber(0, i, BACKMEM, j)]*transferFunctions[t+1][1][j]*backMems[0][i][j]/(pars->nodesPerLayer);
-                }
+            if(pars->backPropBackWeights) {
+                for(int j=0; j<pars->nodesPerLayer; j++)
+                    normfact += pow(transferFunctions[t+1][1][j],2);
             }
-            if(pars->copyInputsToFirstLevel && i<pars->numInputs)
-                thresholds[0][i] = 2.5;
-            else if(nodeClusters[0][i] == NULL)
-                thresholds[0][i] += stepfactor*nodeError[getTurn(-t+1)][0][i][0]*transferDerivatives[t][0][i]/normfact;
-            else
-                thresholds[0][i] = 0;
+            normfact = sqrt(normfact);
+            for(int i=0; i<pars->nodesPerLayer; i++) {
+                for(int j=0; j<pars->numInputs; j++) {
+                    if(pars->copyInputsToFirstLevel && i<pars->numInputs) {
+                        if(i==j)
+                            inputToNodes[i][j] = 5;
+                        else
+                            inputToNodes[i][j] = 0;
+                    }
+                    else {
+                        if(nodeClusters[0][i] == NULL)
+                            inputToNodes[i][j] -= stepfactor*nodeError[getTurn(-t+1)][0][i][0]*transferDerivatives[t][0][i]*savedInputs[getTurn(-t-1)][j]/normfact;
+                        else
+                            inputToNodes[i][j] -= stepfactor*nodeError[getTurn(-t+1)][0][i][getInputNumber(0, i, FORWARDWEIGHT, j)]*savedInputs[getTurn(-t-1)][j]/normfact;
+                    }
+                }
+                for(int j=0; j<pars->nodesPerLayer; j++) {
+                    if(pars->learnStyleSide == LEARNSTYLEBP || pars->learnStyleSide == LEARNSTYLEALTR) {
+                        if(nodeClusters[0][i] == NULL)
+                            sideWeights[0][i][j] -= stepfactor*nodeError[getTurn(-t+1)][0][i][0]*transferDerivatives[t][0][i]*transferFunctions[t+1][0][j]/normfact;                
+                        else
+                            sideWeights[0][i][j] -= stepfactor*nodeError[getTurn(-t+1)][0][i][getInputNumber(0, i, SIDEWEIGHT, j)]*transferFunctions[t+1][0][j]/normfact;                
+                    }
+                    if(pars->bpMemStrengths && (pars->learnStyleSide == LEARNSTYLEHB || pars->learnStyleSide == LEARNSTYLEALT)) {
+                        if(nodeClusters[0][i] == NULL)
+                            memStrengths[0][j] -= stepfactor*nodeError[getTurn(-t+1)][0][i][0]*transferDerivatives[t][0][i]*transferFunctions[t+1][0][j]*sideMems[0][i][j]/(pars->nodesPerLayer);
+                        else
+                            memStrengths[0][j] -= stepfactor*nodeError[getTurn(-t+1)][0][i][getInputNumber(0, i, SIDEMEM, j)]*transferFunctions[t+1][0][j]*sideMems[0][i][j]/(pars->nodesPerLayer);
+                    }
+                    if(pars->backPropBackWeights) {
+                        if(nodeClusters[0][i] == NULL)
+                            backWeights[0][i][j] -= stepfactor*nodeError[getTurn(-t+1)][0][i][0]*transferDerivatives[t][0][i]*transferFunctions[t+1][1][j]/normfact;
+                        else
+                            backWeights[0][i][j] -= stepfactor*nodeError[getTurn(-t+1)][0][i][getInputNumber(0, i, BACKWEIGHT, j)]*transferFunctions[t+1][1][j]/normfact;
+                    }
+                    if(pars->bpMemStrengths && pars->useBackMems) {
+                        if(nodeClusters[0][i] == NULL)
+                            memStrengths[1][j] -= stepfactor*nodeError[getTurn(-t+1)][0][i][0]*transferDerivatives[t][0][i]*transferFunctions[t+1][1][j]*backMems[0][i][j]/(pars->nodesPerLayer);
+                        else
+                            memStrengths[1][j] -= stepfactor*nodeError[getTurn(-t+1)][0][i][getInputNumber(0, i, BACKMEM, j)]*transferFunctions[t+1][1][j]*backMems[0][i][j]/(pars->nodesPerLayer);
+                    }
+                }
+                if(pars->copyInputsToFirstLevel && i<pars->numInputs)
+                    thresholds[0][i] = 2.5;
+                else if(nodeClusters[0][i] == NULL)
+                    thresholds[0][i] += stepfactor*nodeError[getTurn(-t+1)][0][i][0]*transferDerivatives[t][0][i]/normfact;
+                else
+                    thresholds[0][i] = 0;
+            }
         }
     }
 }
@@ -1124,6 +1130,8 @@ void Cluster::defineArrays() {
     for(int i=0; i<pars->numTurnsSaved; i++) {
         outputTransferDerivatives[i] = new double[pars->numOutputs];
     }
+
+    fixedLayers.resize(pars->numLayers+1, false);
 }
 
 void Cluster::addCluster(int layer, int node, Cluster* cluster) {
@@ -1739,6 +1747,8 @@ bool makeChange(double changeChance) {
 
 void Cluster::copyWeights(Cluster* source, double changeChance) {
     for(int i=0; i<pars->numLayers && i<source->getPars()->numLayers; i++) {
+        if(fixedLayers[i])
+            continue;
         for(int j=0; j<pars->nodesPerLayer && j<source->getPars()->nodesPerLayer; j++) {
             bool changenode = makeChange(changeChance);
             if(i==0) {
@@ -1779,12 +1789,14 @@ void Cluster::copyWeights(Cluster* source, double changeChance) {
         }
     }
 
-    for(int i=0; i<pars->numOutputs && i<source->getPars()->numOutputs; i++) {
-        if(makeChange(changeChance)) {
-            for(int j=0; j<pars->nodesPerLayer && j<source->getPars()->nodesPerLayer; j++) {
-                nodesToOutput[i][j] = source->getNodeToOutput(i,j);
+    if(!fixedLayers[pars->numLayers]) {
+        for(int i=0; i<pars->numOutputs && i<source->getPars()->numOutputs; i++) {
+            if(makeChange(changeChance)) {
+                for(int j=0; j<pars->nodesPerLayer && j<source->getPars()->nodesPerLayer; j++) {
+                    nodesToOutput[i][j] = source->getNodeToOutput(i,j);
+                }
+                outputThresholds[i] = source->getOutputThreshold(i);
             }
-            outputThresholds[i] = source->getOutputThreshold(i);
         }
     }
 }
@@ -1795,10 +1807,22 @@ double Cluster::getInputToNode(int node, int input) {
     return inputToNodes[node][input];
 }
 
+void Cluster::setInputToNode(double value, int node, int input) {
+    if(node < 0 || node >= pars->nodesPerLayer || input < 0 || input >= pars->numInputs)
+        throw std::out_of_range("asked for invalid weight: inputToNodes");
+    inputToNodes[node][input] = value;
+}
+
 double Cluster::getNodeToNode(int layer, int node1, int node2) {
     if(layer < 0 || layer >= pars->numLayers-1 || node1 < 0 || node1 >= pars->nodesPerLayer || node2 < 0 || node2 >= pars->nodesPerLayer)
         throw std::out_of_range("asked for invalid weight: nodesToNodes");
     return nodesToNodes[layer][node1][node2];
+}
+
+void Cluster::setNodeToNode(double value, int layer, int node1, int node2) {
+    if(layer < 0 || layer >= pars->numLayers-1 || node1 < 0 || node1 >= pars->nodesPerLayer || node2 < 0 || node2 >= pars->nodesPerLayer)
+        throw std::out_of_range("asked for invalid weight: nodesToNodes");
+    nodesToNodes[layer][node1][node2] = value;
 }
 
 double Cluster::getThreshold(int layer, int node) {
@@ -1807,10 +1831,22 @@ double Cluster::getThreshold(int layer, int node) {
     return thresholds[layer][node];
 }
 
+void Cluster::setThreshold(double value, int layer, int node) {
+    if(layer < 0 || layer >= pars->numLayers || node < 0 || node > pars->nodesPerLayer)
+        throw std::out_of_range("asked for invalid weight: thresholds");
+    thresholds[layer][node] = value;
+}
+
 double Cluster::getNodeToOutput(int output, int node) {
     if(output < 0 || output >= pars->numOutputs || node < 0 || node > pars->nodesPerLayer)
         throw std::out_of_range("asked for invalid weight: nodesToOutput");
     return nodesToOutput[output][node];
+}
+
+void Cluster::setNodeToOutput(double value, int output, int node) {
+    if(output < 0 || output >= pars->numOutputs || node < 0 || node > pars->nodesPerLayer)
+        throw std::out_of_range("asked for invalid weight: nodesToOutput");
+    nodesToOutput[output][node] = value;
 }
 
 double Cluster::getOutputThreshold(int output) {
@@ -1819,10 +1855,22 @@ double Cluster::getOutputThreshold(int output) {
     return outputThresholds[output];
 }
 
+void Cluster::setOutputThreshold(double value, int output) {
+    if(output < 0 || output >= pars->numOutputs)
+        throw std::out_of_range("asked for invalid weight: outputThresholds");
+    outputThresholds[output] = value;
+}
+
 double Cluster::getSideWeight(int layer, int node1, int node2) {
     if(layer < 0 || layer >= pars->numLayers || node1 < 0 || node1 > pars->nodesPerLayer || node2 < 0 || node2 >= pars->nodesPerLayer)
         throw std::out_of_range("asked for invalid weight: sideWeights");
     return sideWeights[layer][node1][node2];
+}
+
+void Cluster::setSideWeight(double value, int layer, int node1, int node2) {
+    if(layer < 0 || layer >= pars->numLayers || node1 < 0 || node1 > pars->nodesPerLayer || node2 < 0 || node2 >= pars->nodesPerLayer)
+        throw std::out_of_range("asked for invalid weight: sideWeights");
+    sideWeights[layer][node1][node2] = value;
 }
 
 double Cluster::getBackWeight(int layer, int node1, int node2) {
@@ -1831,10 +1879,22 @@ double Cluster::getBackWeight(int layer, int node1, int node2) {
     return backWeights[layer][node1][node2];
 }
 
+void Cluster::setBackWeight(double value, int layer, int node1, int node2) {
+    if(layer < 0 || layer >= pars->numLayers-1 || node1 < 0 || node1 > pars->nodesPerLayer || node2 < 0 || node2 >= pars->nodesPerLayer)
+        throw std::out_of_range("asked for invalid weight: backWeights");
+    backWeights[layer][node1][node2] = value;
+}
+
 double Cluster::getForwardMem(int layer, int node1, int node2) {
     if(layer < 0 || layer >= pars->numLayers-1 || node1 < 0 || node1 > pars->nodesPerLayer || node2 < 0 || node2 >= pars->nodesPerLayer)
         throw std::out_of_range("asked for invalid weight: forwardMems");
     return forwardMems[layer][node1][node2];
+}
+
+void Cluster::setForwardMem(double value, int layer, int node1, int node2) {
+    if(layer < 0 || layer >= pars->numLayers-1 || node1 < 0 || node1 > pars->nodesPerLayer || node2 < 0 || node2 >= pars->nodesPerLayer)
+        throw std::out_of_range("asked for invalid weight: forwardMems");
+    forwardMems[layer][node1][node2] = value;
 }
 
 double Cluster::getSideMem(int layer, int node1, int node2) {
@@ -1843,12 +1903,23 @@ double Cluster::getSideMem(int layer, int node1, int node2) {
     return sideMems[layer][node1][node2];
 }
 
+void Cluster::setSideMem(double value, int layer, int node1, int node2) {
+    if(layer < 0 || layer >= pars->numLayers || node1 < 0 || node1 > pars->nodesPerLayer || node2 < 0 || node2 >= pars->nodesPerLayer)
+        throw std::out_of_range("asked for invalid weight: sideMems");
+    sideMems[layer][node1][node2] = value;
+}
+
 double Cluster::getBackMem(int layer, int node1, int node2) {
     if(layer < 0 || layer >= pars->numLayers-1 || node1 < 0 || node1 > pars->nodesPerLayer || node2 < 0 || node2 >= pars->nodesPerLayer)
         throw std::out_of_range("asked for invalid weight: backMems");
     return backMems[layer][node1][node2];
 }
 
+void Cluster::setBackMem(double value, int layer, int node1, int node2) {
+    if(layer < 0 || layer >= pars->numLayers-1 || node1 < 0 || node1 > pars->nodesPerLayer || node2 < 0 || node2 >= pars->nodesPerLayer)
+        throw std::out_of_range("asked for invalid weight: backMems");
+    backMems[layer][node1][node2] = value;
+}
 
 double **Cluster::getInputToNodes() {
     return inputToNodes;
@@ -1913,10 +1984,6 @@ void Cluster::mutateWeights(double mutateFactor) {
         if(makeChange(mutateFactor))
             outputThresholds[j] = rand () % 5 - 2.5;
     }
-}
-
-void Cluster::setOutputThreshold(double thresh, int num) {    //for setting the initial ballpark output value when the output is non-binary
-    outputThresholds[num] = thresh;
 }
 
 void Cluster::setConvolutionBase(Cluster* convBase) {
@@ -1995,4 +2062,16 @@ void Cluster::deleteConvolutionSharedArrays() {
         delete [] forwardMems[i];
     }
     delete [] forwardMems;
+}
+
+void Cluster::setFixedLayer(size_t layer) {
+    if(layer >= fixedLayers.size())
+        throw std::runtime_error("tried to fix a layer that doesn't exist");
+    fixedLayers[layer] = true;
+}
+
+void Cluster::setUnfixedLayer(size_t layer) {
+    if(layer >= fixedLayers.size())
+        throw std::runtime_error("tried to fix a layer that doesn't exist");
+    fixedLayers[layer] = false;
 }

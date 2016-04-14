@@ -12,6 +12,39 @@ Cluster* Genbot::createCluster(Genome* genome, int numInputs, int numOutputs) {
     return clust;
 }
 
+Cluster* Genbot::createFixedBaseMinimalCluster(Genome* genome, int numInputs, int numOutputs) {
+    if(genome->pars[0] == NULL)
+        return NULL;
+    genome->pars[0]->numInputs = numInputs;
+    genome->pars[0]->numOutputs = numOutputs;
+
+    ClusterParameters* pars = genome->pars[0]->copy();
+    pars->nodesPerLayer = 2;
+    pars->numLayers = 1;
+    pars->useBackWeights = false;
+    pars->backPropBackWeights = false;
+    pars->useSideMems = false;
+    pars->useBackMems = false;
+    pars->useForwardMems = false;
+    pars->learnStyleSide = LEARNSTYLENONE;
+    pars->bpMemStrengths = false;
+    pars->copyInputsToFirstLevel = false;
+    pars->lockMaxMem = false;
+    pars->tlevel = 0;
+
+    Cluster* clust = new Cluster(pars);
+
+    for(int i=0; i<numInputs; i++) {
+        clust->setInputToNode(1, 0, i);
+        clust->setInputToNode(-1, 1, i);
+    }
+    clust->setThreshold(0, 0, 0);
+    clust->setThreshold(0, 0, 1);
+    
+    clust->setFixedLayer(0);
+    return clust;
+}
+
 void Genbot::fillClusters(Cluster* cluster, Genome* genome, int depth) {
     if(depth >= genome->getChildDepth())
         return;

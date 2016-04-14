@@ -12,6 +12,8 @@
 #define MUTATE_WEIGHT_FACTOR 0.05
 #define GIVE_CLUSTER_RAWDATA false
 
+#define PRESET_FIXED_BASE_MINIMAL 1
+
 class DllExport Genbot {
     private:
     Genome* genome;
@@ -52,6 +54,19 @@ class DllExport Genbot {
         genome->createRandomGenome();
         createConvolutions();
         cluster = createCluster(genome, getNumInputsWithConvolutions(nInputs), numOutputs);
+        numInputs = nInputs;
+        id = ID;
+    }
+
+    Genbot(Genome* g, int nInputs, int numOutputs, int ID, int presetType) {
+        genome = g;
+        createConvolutions();
+        if(presetType == PRESET_FIXED_BASE_MINIMAL) {
+            cluster = createFixedBaseMinimalCluster(genome, getNumInputsWithConvolutions(nInputs), numOutputs);
+        }
+        else {
+            cluster = createCluster(genome, getNumInputsWithConvolutions(nInputs), numOutputs);
+        }
         numInputs = nInputs;
         id = ID;
     }
@@ -146,6 +161,7 @@ class DllExport Genbot {
 
     private:
     Cluster* createCluster(Genome* genome, int numInputs, int numOutputs);
+    Cluster* createFixedBaseMinimalCluster(Genome* genome, int numInputs, int numOutputs);
     void fillClusters(Cluster* cluster, Genome* genome, int depth);
     void loadChildren(int* layer, int* node, int depth, std::string loc);
     void saveChildren(int* layer, int* node, int depth, std::string loc);

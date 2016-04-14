@@ -151,6 +151,8 @@ class Cluster {
     double ** outputTransferFunctions; //[pars->numTurnsSaved][pars->numOutputs]
     double ** outputTransferDerivatives; //[pars->numTurnsSaved][pars->numOutputs]
 
+    std::vector<bool> fixedLayers;
+
     int clusterTurn;
     int currentInput;
     bool isConvChild = false;
@@ -201,6 +203,17 @@ class Cluster {
     double getSideMem(int layer, int node1, int node2);
     double getBackMem(int layer, int node1, int node2);
 
+    void setInputToNode(double value, int node, int input);
+    void setNodeToNode(double value, int layer, int node1, int node2);
+    void setThreshold(double value, int layer, int node);
+    void setNodeToOutput(double value, int output, int node);
+    void setOutputThreshold(double value, int output);
+    void setSideWeight(double value, int layer, int node1, int node2);
+    void setBackWeight(double value, int layer, int node1, int node2);
+    void setForwardMem(double value, int layer, int node1, int node2);
+    void setSideMem(double value, int layer, int node1, int node2);
+    void setBackMem(double value, int layer, int node1, int node2);
+
     //returns the actual pointers
     double **getInputToNodes();
     double ***getNodesToNodes();
@@ -213,7 +226,9 @@ class Cluster {
     double ***getSideMems();
     double ***getBackMems();
 
-    void setOutputThreshold(double thresh, int num);    //for setting the initial ballpark output value when the output is non-binary
+    void setFixedLayer(size_t layer);
+    void setUnfixedLayer(size_t layer);
+
     void setConvolutionBase(Cluster* convBase);
 
     void setIsConvChild(bool c) {

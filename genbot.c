@@ -569,9 +569,9 @@ void Genbot::createConvErrors() {
 
     maxConvInputs.resize(maxConvsOnLayer);
 
-    for(size_t j=0; j<convolutions.size(); j++) {
-        for(size_t i=0; i<maxConvsOnLayer; i++) {
-            maxConvInputs[i] = 0;
+    for(size_t i=0; i<maxConvsOnLayer; i++) {
+        maxConvInputs[i] = 0;
+        for(size_t j=0; j<convolutions.size(); j++) {
             if(i < convolutions[j].size() && convolutions[j][i]->getPars()->numInputs > maxConvInputs[i]) {
                 maxConvInputs[i] = convolutions[j][i]->getPars()->numInputs;
             }

@@ -1964,25 +1964,35 @@ double ***Cluster::getBackMems() {
 //don't mutate the side or back weights at the moment, for questionable reasons
 //(because they aren't seeded initially when the bots are created)
 void Cluster::mutateWeights(double mutateFactor) {
-    for(int i=0; i<pars->nodesPerLayer; i++)
-        for(int j=0; j<pars->numInputs; j++)
-            if(makeChange(mutateFactor))
-                inputToNodes[i][j]=rand() % 5 - 2.5;
-    for(int i=0; i<pars->numLayers-1; i++)
+    if(!fixedLayers[0]) {
+        for(int i=0; i<pars->nodesPerLayer; i++)
+            for(int j=0; j<pars->numInputs; j++)
+                if(makeChange(mutateFactor))
+                    inputToNodes[i][j]=rand() % 5 - 2.5;
+    }
+    for(int i=0; i<pars->numLayers-1; i++) {
+        if(fixedLayers[i+1])
+            continue;
         for(int j=0; j<pars->nodesPerLayer; j++)
             for(int k=0; k<pars->nodesPerLayer; k++)
                 if(makeChange(mutateFactor))
                     nodesToNodes[i][j][k]= rand() % 5 - 2.5;
-    for(int i=0; i<pars->numLayers; i++)
+    }
+    for(int i=0; i<pars->numLayers; i++) {
+        if(fixedLayers[i])
+            continue;
         for(int j=0; j<pars->nodesPerLayer; j++)
             if(makeChange(mutateFactor))
                 thresholds[i][j]= rand() % 5 - 2.5;
-    for(int j=0; j<pars->numOutputs; j++) {
-        for(int i=0; i<pars->nodesPerLayer; i++)
+    }
+    if(!fixedLayers[pars->numLayers]) {
+        for(int j=0; j<pars->numOutputs; j++) {
+            for(int i=0; i<pars->nodesPerLayer; i++)
+                if(makeChange(mutateFactor))
+                    nodesToOutput[j][i]= rand() % 5 - 2.5;
             if(makeChange(mutateFactor))
-                nodesToOutput[j][i]= rand() % 5 - 2.5;
-        if(makeChange(mutateFactor))
-            outputThresholds[j] = rand () % 5 - 2.5;
+                outputThresholds[j] = rand () % 5 - 2.5;
+        }
     }
 }
 

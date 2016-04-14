@@ -63,6 +63,10 @@ class DllExport Genbot {
         createConvolutions();
         if(presetType == PRESET_FIXED_BASE_MINIMAL) {
             cluster = createFixedBaseMinimalCluster(genome, getNumInputsWithConvolutions(nInputs), numOutputs);
+            int cSize = convolutions.size();
+            for(size_t j=0; j<convolutions[cSize-1].size(); j++) {
+                convolutions[cSize-1][j]->getPars()->useOutputTransfer = false;
+            }
         }
         else {
             cluster = createCluster(genome, getNumInputsWithConvolutions(nInputs), numOutputs);

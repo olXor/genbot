@@ -300,6 +300,48 @@ void Genbot::copyChildrenWeights(Genbot* source, double changeChance, int* layer
     }
 }
 
+void Genbot::mutateWeights() {
+    int maxdepth = getChildDepth();
+    int layer[maxdepth];
+    int node[maxdepth];
+    for(int i=0; i<maxdepth; i++) {
+        layer[i] = 0;
+        node[i] = 0;
+    }
+    mutateChildrenWeights(layer, node, 0);
+
+    for(size_t layer=0; layer<genome->convProperties.size(); layer++) {
+        for(size_t i=0; i<genome->convProperties[layer].size(); i++) {
+            getConvolutionCluster(layer, i)->mutateWeights(MUTATE_WEIGHT_FACTOR);
+        }
+    }
+}
+
+void Genbot::mutateChildrenWeights(int* layer, int* node, int depth) {
+    if(depth >= getChildDepth() || getPars()[depth] == NULL) return;
+
+    Cluster* destCluster = cluster->getChildCluster(layer, node, depth);
+
+    destCluster->mutateWeights(MUTATE_WEIGHT_FACTOR);
+
+    for(int i=0; i<getPars()[depth]->numLayers; i++) {
+        for(int j=0; j<getPars()[depth]->nodesPerLayer; j++) {
+            int* nlayer = new int[getChildDepth()];
+            int* nnode = new int[getChildDepth()];
+            for(int k=0; k<depth; k++) {
+                nlayer[k] = layer[k];
+                nnode[k] = node[k];
+            }
+
+            nlayer[depth] = i;
+            nnode[depth] = j;
+            mutateChildrenWeights(nlayer, nnode, depth+1);
+            delete [] nlayer;
+            delete [] nnode;
+        }
+    }
+}
+
 int Genbot::getNumConvolutionInputs(ConvolutionProperties cp, int layer) {
     int numInputs;
     if(layer == 0) {

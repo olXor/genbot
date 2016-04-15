@@ -138,9 +138,8 @@ class DllExport Genbot {
     void learn(double pp);
     void learnRawOutput(double* correctoutput, double learnfactor, int size);
 
-    void mutateWeights() {
-        cluster->mutateWeights(MUTATE_WEIGHT_FACTOR);
-    }
+    void mutateWeights();
+    void mutateChildrenWeights(int* layer, int* node, int depth);
 
     Genome* getGenome() {
         return genome;

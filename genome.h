@@ -48,6 +48,7 @@ class Genome {
 
         size_t MAX_CONVOLUTION_NODE_LAYERS = 1;
         size_t MAX_CONVOLUTION_NODESPERLAYER = 10;
+        size_t MIN_CONVOLUTION_NODESPERLAYER = 1;
 
         size_t MAX_CONVOLUTION_DIMENSION = 10;
         size_t MIN_CONVOLUTION_DIMENSION = 2;

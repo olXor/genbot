@@ -642,7 +642,7 @@ ConvolutionProperties Genome::mutateConvolutionProperties(ConvolutionProperties 
     //nodesPerLayer
     if(mutate() && cp.nodesPerLayer < (int)MAX_CONVOLUTION_NODESPERLAYER)
         cp.nodesPerLayer++;
-    if(mutate() && cp.nodesPerLayer > 1)
+    if(mutate() && cp.nodesPerLayer > (int)MIN_CONVOLUTION_NODESPERLAYER)
         cp.nodesPerLayer--;
 
     //stepfactor
@@ -770,6 +770,8 @@ void Genome::readCfg() {
             std::istringstream(value) >> MAX_CONVOLUTION_NODE_LAYERS;
         else if(variable == "MAX_CONVOLUTION_NODESPERLAYER")
             std::istringstream(value) >> MAX_CONVOLUTION_NODESPERLAYER;
+        else if(variable == "MIN_CONVOLUTION_NODESPERLAYER")
+            std::istringstream(value) >> MIN_CONVOLUTION_NODESPERLAYER;
         else if(variable == "MAX_CONVOLUTION_DIMENSION")
             std::istringstream(value) >> MAX_CONVOLUTION_DIMENSION;
         else if(variable == "MIN_CONVOLUTION_DIMENSION")

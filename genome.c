@@ -516,6 +516,7 @@ void Genome::loadGenome(const char* file) {
                     int convLayer;
                     std::istringstream(token3) >> convLayer;
                     ConvolutionProperties cp;
+                    cp.level = convLayer;
                     std::string subtoken1, subtoken2;
                     while(iss>>subtoken1>>subtoken2) {
                         if(subtoken1=="rank:") {
@@ -615,10 +616,20 @@ bool Genome::hasSideWeights() {
 
 ConvolutionProperties Genome::mutateConvolutionProperties(ConvolutionProperties cp) {
     //dimensions
+    int maxDimension;
+    int minDimension;
+    if(cp.level == 0) {
+        maxDimension = MAX_CONVOLUTION_DIMENSION;
+        minDimension = MIN_CONVOLUTION_DIMENSION;
+    }
+    else {
+        maxDimension = (int)MAX_CONVOLUTION_DIMENSION*pow(CONVOLUTION_DIMENSION_LAYER_MULTIPLIER, cp.level);
+        minDimension = (int)MAX_CONVOLUTION_DIMENSION*pow(CONVOLUTION_DIMENSION_LAYER_MULTIPLIER, cp.level-1);
+    }
     for(int i=0; i<cp.rank; i++) {
-        if(mutate())
+        if(mutate() && cp.dimensions[i] < maxDimension)
             cp.dimensions[i]++;
-        if(mutate() && cp.dimensions[i] > 1)
+        if(mutate() && cp.dimensions[i] > minDimension)
             cp.dimensions[i]--;
     }
 

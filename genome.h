@@ -21,10 +21,11 @@ struct ConvolutionProperties {
     int nodesPerLayer;
     double stepfactor;
     double transferWidth;
+    int level;
 };
 
 static ConvolutionProperties CONVOLUTION_PROPERTIES_INITIALIZER = {
-    1, {1}, 0, 0, {1}, 1, 1, 1, 1
+    1, {1}, 0, 0, {1}, 1, 1, 1, 1, 0
 };
 
 class Genome {

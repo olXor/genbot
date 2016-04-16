@@ -726,7 +726,7 @@ int Genome::getRandomConvolutionNumLayers() {
 }
 
 int Genome::getRandomConvolutionNodesPerLayer() {
-    return rand()%MAX_CONVOLUTION_NODESPERLAYER +1;
+    return rand()%(MAX_CONVOLUTION_NODESPERLAYER-MIN_CONVOLUTION_NODESPERLAYER+1) + MIN_CONVOLUTION_NODESPERLAYER;
 }
 
 double Genome::getRandomConvolutionStepFactor() {

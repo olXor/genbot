@@ -9,7 +9,7 @@
 #include <queue>
 //#include "nvwa/debug_new.h"
 
-#define MUTATE_WEIGHT_FACTOR 0.01
+#define MUTATE_WEIGHT_FACTOR 0.02
 #define GIVE_CLUSTER_RAWDATA false
 
 //--these are not parameters, but definitions of preset variables

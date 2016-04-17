@@ -340,7 +340,7 @@ double Genome::getRandomPerturbFactor() {
 }
 
 double Genome::getRandomTransferWidth() {
-    return exp((rand()%10)/2);
+    return exp((rand()%20)/2);
 }
 
 ClusterParameters* Genome::createRandomClusterParameters() {
@@ -683,6 +683,7 @@ ConvolutionProperties Genome::getRandomConvolutionProperties(int level) {
     cp.nodesPerLayer = getRandomConvolutionNodesPerLayer();
     cp.stepfactor = getRandomConvolutionStepFactor();
     cp.transferWidth = getRandomConvolutionTransferWidth();
+    cp.level = level;
 
     return cp;
 

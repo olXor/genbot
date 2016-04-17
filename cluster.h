@@ -16,6 +16,7 @@
 #include <fstream>
 #include <cstdlib>
 //#include "nvwa/debug_new.h"
+#include <ncurses.h>
 
 #define LEARNSTYLENONE 0
 #define LEARNSTYLEBP 1
